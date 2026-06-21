@@ -1,43 +1,30 @@
 const express = require("express");
-const { MongoClient, ServerApiVersion } = require("mongodb");
-const app = express();
-require("dotenv").config();
 const cors = require("cors");
+require("dotenv").config();
+const { connectDB } = require("./src/config/db");
+const routes = require("./src/routes");
 
-// Middleware
+const app = express();
+const port = process.env.PORT || 5000;
+
+// Middlewares
 app.use(cors());
 app.use(express.json());
 
-const port = process.env.PORT;
+// Connect Database
+connectDB();
 
-const uri = process.env.MONGODB_URI;
-// Create a MongoClient with a MongoClientOptions object to set the Stable API version
-const client = new MongoClient(uri, {
-  serverApi: {
-    version: ServerApiVersion.v1,
-    strict: true,
-    deprecationErrors: true,
-  },
-});
+// Central Routes setup
+app.use("/api", routes);
 
-const run = async () => {
-  try {
-    // Connect the client to the server	(optional starting in v4.7)
-    await client.connect();
-    // Send a ping to confirm a successful connection
-    await client.db("admin").command({ ping: 1 });
-    console.log(
-      "Pinged your deployment. You successfully connected to MongoDB!",
-    );
-  } finally {
-    // Ensures that the client will close when you finish/error
-    // await client.close();
-  }
-};
-run().catch(console.dir);
-
+// Root end-point
 app.get("/", (req, res) => {
   res.send("FitSphere Server is running");
+});
+
+// Global Error Handler & 404 Route
+app.use((req, res, next) => {
+  res.status(404).json({ success: false, message: "API Not Found" });
 });
 
 app.listen(port, () => {
