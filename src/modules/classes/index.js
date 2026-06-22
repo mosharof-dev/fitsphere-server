@@ -4,5 +4,29 @@ const { db } = require("../../config/db");
 
 // Classes Collection
 const classesCollection = db.collection("classes");
+const usersCollection = db.collection("user");
+
+router.post("/", async (req, res) => {
+  const trainer = await usersCollection.findOne({
+    email: req.user.email,
+  });
+
+  const classInfo = req.body;
+  console.log(classInfo);
+
+  const newClass = {
+    ...classInfo,
+    trainerId: trainer._id,
+    trainerName: trainer.name,
+    trainerEmail: trainer.email,
+    status: "pending",
+    bookingCount: 0,
+    createdAt: new Date(),
+  };
+
+  const result = await classesCollection.insertOne(newClass);
+
+  res.send(result);
+});
 
 module.exports = router;
