@@ -6,29 +6,6 @@ const { db } = require("../../config/db");
 const classesCollection = db.collection("classes");
 const usersCollection = db.collection("user");
 
-// router.post("/", async (req, res) => {
-//   const trainer = await usersCollection.findOne({
-//     email: req.body.trainerEmail,
-//   });
-
-//   const classInfo = req.body;
-//   console.log(classInfo);
-
-//   const newClass = {
-//     ...classInfo,
-//     trainerId: trainer._id,
-//     trainerName: trainer.name,
-//     trainerEmail: trainer.email,
-//     status: "pending",
-//     bookingCount: 0,
-//     createdAt: new Date(),
-//   };
-
-//   const result = await classesCollection.insertOne(newClass);
-
-//   res.send(result);
-// });
-
 router.post("/", async (req, res) => {
   const classInfo = req.body;
 
@@ -36,11 +13,18 @@ router.post("/", async (req, res) => {
     email: classInfo.trainerEmail,
   });
 
+  if (!trainer) {
+    return res
+      .status(404)
+      .json({ success: false, message: "Trainer not found" });
+  }
+
   const newClass = {
     ...classInfo,
     trainerId: trainer._id,
     trainerName: trainer.name,
     trainerEmail: trainer.email,
+    trainerImage: trainer.image,
     status: "pending",
     bookingCount: 0,
     createdAt: new Date(),
@@ -50,4 +34,11 @@ router.post("/", async (req, res) => {
 
   res.send(result);
 });
+
+router.get("/", async (req, res) => {
+  const cursor = classesCollection.find();
+  const result = await cursor.toArray();
+  res.send(result);
+});
+
 module.exports = router;
