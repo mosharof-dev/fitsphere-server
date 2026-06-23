@@ -36,9 +36,47 @@ router.post("/", async (req, res) => {
 });
 
 router.get("/", async (req, res) => {
-  const cursor = classesCollection.find();
-  const result = await cursor.toArray();
-  res.send(result);
-});
+  const page = Number(req.query.page) || 1;
+  const limit = Number(req.query.limit) || 12;
 
+  const search = req.query.search || "";
+  const category = req.query.category || "";
+
+  const query = {};
+
+  // Search
+  if (search) {
+    query.class_name = {
+      $regex: search,
+      $options: "i",
+    };
+  }
+
+  // Filter
+  if (category) {
+    const categoriesArray = category.split(',').map(c => c.trim());
+    query.category = {
+      $in: categoriesArray,
+    };
+  }
+
+  const skip = (page - 1) * limit;
+
+  const result = await classesCollection
+    .find(query)
+    .skip(skip)
+    .limit(limit)
+    .toArray();
+
+  const total = await classesCollection.countDocuments(
+    query
+  );
+
+  res.send({
+    data: result,
+    total,
+    currentPage: page,
+    totalPages: Math.ceil(total / limit),
+  });
+});
 module.exports = router;
