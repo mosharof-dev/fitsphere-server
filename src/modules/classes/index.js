@@ -1,6 +1,7 @@
 const express = require("express");
 const router = express.Router();
 const { db } = require("../../config/db");
+const { ObjectId } = require("mongodb");
 
 // Classes Collection
 const classesCollection = db.collection("classes");
@@ -70,6 +71,7 @@ router.get("/", async (req, res) => {
 
     const data = await classesCollection
       .find(query)
+      .sort({ _id: -1 })
       .skip(skip)
       .limit(limit)
       .toArray();
@@ -90,6 +92,14 @@ router.get("/", async (req, res) => {
       message: "Failed to fetch classes",
     });
   }
+});
+
+// Get Single Class Api
+router.get("/:id", async (req, res) => {
+  const id = req.params.id;
+  const query = { _id: new ObjectId(id) };
+  const result = await classesCollection.findOne(query);
+  res.send(result);
 });
 
 module.exports = router;
