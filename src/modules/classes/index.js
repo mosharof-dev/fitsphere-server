@@ -6,6 +6,7 @@ const { db } = require("../../config/db");
 const classesCollection = db.collection("classes");
 const usersCollection = db.collection("user");
 
+// Post Classes Api
 router.post("/", async (req, res) => {
   const classInfo = req.body;
 
@@ -35,48 +36,60 @@ router.post("/", async (req, res) => {
   res.send(result);
 });
 
+// Get All Approved Classes Api
 router.get("/", async (req, res) => {
-  const page = Number(req.query.page) || 1;
-  const limit = Number(req.query.limit) || 12;
+  try {
+    const page = Number(req.query.page) || 1;
+    const limit = Number(req.query.limit) || 12;
 
-  const search = req.query.search || "";
-  const category = req.query.category || "";
+    const search = req.query.search || "";
+    const category = req.query.category || "";
 
-  const query = {};
-
-  // Search
-  if (search) {
-    query.class_name = {
-      $regex: search,
-      $options: "i",
+    const query = {
+      status: "approved",
     };
+
+    // Search by class name
+    if (search) {
+      query.class_name = {
+        $regex: search,
+        $options: "i",
+      };
+    }
+
+    // Filter by category
+    if (category) {
+      const categoriesArray = category.split(",").map((c) => c.trim());
+
+      query.category = {
+        $in: categoriesArray,
+      };
+    }
+
+    const skip = (page - 1) * limit;
+
+    const data = await classesCollection
+      .find(query)
+      .skip(skip)
+      .limit(limit)
+      .toArray();
+
+    const total = await classesCollection.countDocuments(query);
+
+    res.status(200).send({
+      data,
+      total,
+      currentPage: page,
+      totalPages: Math.ceil(total / limit),
+    });
+  } catch (error) {
+    console.error("Get classes error:", error);
+
+    res.status(500).send({
+      success: false,
+      message: "Failed to fetch classes",
+    });
   }
-
-  // Filter
-  if (category) {
-    const categoriesArray = category.split(',').map(c => c.trim());
-    query.category = {
-      $in: categoriesArray,
-    };
-  }
-
-  const skip = (page - 1) * limit;
-
-  const result = await classesCollection
-    .find(query)
-    .skip(skip)
-    .limit(limit)
-    .toArray();
-
-  const total = await classesCollection.countDocuments(
-    query
-  );
-
-  res.send({
-    data: result,
-    total,
-    currentPage: page,
-    totalPages: Math.ceil(total / limit),
-  });
 });
+
 module.exports = router;
