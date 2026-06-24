@@ -121,4 +121,38 @@ router.get("/my-classes/:id", async (req, res) => {
   }
 });
 
+// Update Class Api
+router.patch("/:id", async (req, res) => {
+  try {
+    const id = req.params.id;
+    const query = { _id: new ObjectId(id) };
+    const updatedClass = req.body;
+    const result = await classesCollection.updateOne(query, {
+      $set: updatedClass,
+    });
+    res.send(result);
+  } catch (error) {
+    console.error("Update class error:", error);
+    res.status(500).send({
+      success: false,
+      message: "Failed to update class",
+    });
+  }
+});
+// Delete Class Api
+router.delete("/:id", async (req, res) => {
+  try {
+    const id = req.params.id;
+    const query = { _id: new ObjectId(id) };
+    const result = await classesCollection.deleteOne(query);
+    res.send(result);
+  } catch (error) {
+    console.error("Delete class error:", error);
+    res.status(500).send({
+      success: false,
+      message: "Failed to delete class",
+    });
+  }
+});
+
 module.exports = router;
