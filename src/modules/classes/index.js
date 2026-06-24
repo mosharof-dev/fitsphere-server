@@ -102,4 +102,23 @@ router.get("/:id", async (req, res) => {
   res.send(result);
 });
 
+// Get trainer my classes api
+router.get("/my-classes/:id", async (req, res) => {
+  try {
+    const id = req.params.id;
+    const query = { trainerId: new ObjectId(id) };
+    const result = await classesCollection
+      .find(query)
+      .sort({ _id: -1 })
+      .toArray();
+    res.send(result);
+  } catch (error) {
+    console.error("Get trainer my classes error:", error);
+    res.status(500).send({
+      success: false,
+      message: "Failed to fetch trainer's classes",
+    });
+  }
+});
+
 module.exports = router;
