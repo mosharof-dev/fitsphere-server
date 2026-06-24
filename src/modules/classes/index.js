@@ -94,6 +94,39 @@ router.get("/", async (req, res) => {
   }
 });
 
+// Get All Classes for Admin Api (Includes pending, approved, rejected)
+router.get("/all-classes", async (req, res) => {
+  try {
+    const page = Number(req.query.page) || 1;
+    const limit = Number(req.query.limit) || 6;
+    const skip = (page - 1) * limit;
+    const query = {};
+
+    const data = await classesCollection
+      .find(query)
+      .sort({ _id: -1 })
+      .skip(skip)
+      .limit(limit)
+      .toArray();
+
+    const total = await classesCollection.countDocuments(query);
+
+    res.status(200).send({
+      data,
+      total,
+      currentPage: page,
+      totalPages: Math.ceil(total / limit),
+    });
+  } catch (error) {
+    console.error("Get all admin classes error:", error);
+
+    res.status(500).send({
+      success: false,
+      message: "Failed to fetch classes for admin",
+    });
+  }
+});
+
 // Get Single Class Api
 router.get("/:id", async (req, res) => {
   const id = req.params.id;
@@ -151,6 +184,28 @@ router.delete("/:id", async (req, res) => {
     res.status(500).send({
       success: false,
       message: "Failed to delete class",
+    });
+  }
+});
+
+// Update Class Status Api
+router.patch("/status/:id", async (req, res) => {
+  try {
+    const id = req.params.id;
+    const query = { _id: new ObjectId(id) };
+    const { status } = req.body;
+
+    // Status should be either "approved", "rejected", or "pending"
+    const result = await classesCollection.updateOne(query, {
+      $set: { status: status },
+    });
+
+    res.send(result);
+  } catch (error) {
+    console.error("Update class status error:", error);
+    res.status(500).send({
+      success: false,
+      message: "Failed to update class status",
     });
   }
 });
