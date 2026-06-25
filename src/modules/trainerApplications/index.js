@@ -16,6 +16,12 @@ router.post("/", async (req, res) => {
       return res.status(400).json({ error: "Missing required fields" });
     }
 
+    // Check if user is blocked
+    const user = await usersCollection.findOne({ email: application.email });
+    if (user && user.status === "blocked") {
+      return res.status(403).json({ error: "Action restricted by Admin. You are blocked." });
+    }
+
     // Check if user already has a pending application
     const existing = await applicationsCollection.findOne({
       email: application.email,

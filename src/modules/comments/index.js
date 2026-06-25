@@ -11,7 +11,8 @@ const usersCollection = db.collection("user");
 router.post("/:postId", async (req, res) => {
   try {
     const { postId } = req.params;
-    const { parentCommentId, text, authorId, authorName, authorImage } = req.body;
+    const { parentCommentId, text, authorId, authorName, authorImage } =
+      req.body;
 
     if (!ObjectId.isValid(postId) || !ObjectId.isValid(authorId) || !text) {
       return res.status(400).json({ error: "Invalid data provided" });
@@ -20,7 +21,9 @@ router.post("/:postId", async (req, res) => {
     // Check if user is blocked
     const user = await usersCollection.findOne({ _id: new ObjectId(authorId) });
     if (user && user.status === "blocked") {
-      return res.status(403).json({ error: "Action restricted by Admin. You are blocked." });
+      return res
+        .status(403)
+        .json({ error: "Action restricted by Admin. You are blocked." });
     }
 
     const newComment = {
@@ -34,11 +37,11 @@ router.post("/:postId", async (req, res) => {
     };
 
     const result = await forumCommentsCollection.insertOne(newComment);
-    
+
     // Increment comment count on the post
     await forumCollection.updateOne(
       { _id: new ObjectId(postId) },
-      { $inc: { commentCount: 1 } }
+      { $inc: { commentCount: 1 } },
     );
 
     res.status(201).json({ ...newComment, _id: result.insertedId });
@@ -82,21 +85,27 @@ router.patch("/:commentId", async (req, res) => {
     // Check if user is blocked
     const user = await usersCollection.findOne({ _id: new ObjectId(authorId) });
     if (user && user.status === "blocked") {
-      return res.status(403).json({ error: "Action restricted by Admin. You are blocked." });
+      return res
+        .status(403)
+        .json({ error: "Action restricted by Admin. You are blocked." });
     }
 
-    const comment = await forumCommentsCollection.findOne({ _id: new ObjectId(commentId) });
+    const comment = await forumCommentsCollection.findOne({
+      _id: new ObjectId(commentId),
+    });
     if (!comment) {
       return res.status(404).json({ error: "Comment not found" });
     }
 
     if (comment.authorId.toString() !== authorId) {
-      return res.status(403).json({ error: "You can only edit your own comments" });
+      return res
+        .status(403)
+        .json({ error: "You can only edit your own comments" });
     }
 
     await forumCommentsCollection.updateOne(
       { _id: new ObjectId(commentId) },
-      { $set: { text, updatedAt: new Date() } }
+      { $set: { text, updatedAt: new Date() } },
     );
 
     res.status(200).json({ message: "Comment updated successfully" });
@@ -116,7 +125,21 @@ router.delete("/:commentId", async (req, res) => {
       return res.status(400).json({ error: "Invalid comment ID" });
     }
 
-    const comment = await forumCommentsCollection.findOne({ _id: new ObjectId(commentId) });
+    // Check if user is blocked (using authorId if provided)
+    if (authorId && ObjectId.isValid(authorId)) {
+      const user = await usersCollection.findOne({
+        _id: new ObjectId(authorId),
+      });
+      if (user && user.status === "blocked") {
+        return res
+          .status(403)
+          .json({ error: "Action restricted by Admin. You are blocked." });
+      }
+    }
+
+    const comment = await forumCommentsCollection.findOne({
+      _id: new ObjectId(commentId),
+    });
     if (!comment) {
       return res.status(404).json({ error: "Comment not found" });
     }
@@ -127,15 +150,19 @@ router.delete("/:commentId", async (req, res) => {
     // }
 
     // If it's a top-level comment, we should probably delete its replies too.
-    const deletedReplies = await forumCommentsCollection.deleteMany({ parentCommentId: new ObjectId(commentId) });
-    const result = await forumCommentsCollection.deleteOne({ _id: new ObjectId(commentId) });
+    const deletedReplies = await forumCommentsCollection.deleteMany({
+      parentCommentId: new ObjectId(commentId),
+    });
+    const result = await forumCommentsCollection.deleteOne({
+      _id: new ObjectId(commentId),
+    });
 
     // Decrement count on post by 1 (for the main comment) + number of replies deleted
     const totalDeleted = 1 + (deletedReplies.deletedCount || 0);
 
     await forumCollection.updateOne(
       { _id: comment.postId },
-      { $inc: { commentCount: -totalDeleted } }
+      { $inc: { commentCount: -totalDeleted } },
     );
 
     res.status(200).json({ message: "Comment deleted successfully" });

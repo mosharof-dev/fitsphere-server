@@ -22,6 +22,10 @@ router.post("/", async (req, res) => {
       return res.status(403).send({ message: "Admins and Trainers cannot favorite classes" });
     }
 
+    if (user.status === "blocked") {
+      return res.status(403).send({ message: "Action restricted by Admin. You are blocked." });
+    }
+
     // Check if it already exists
     const existing = await favoritesCollection.findOne({
       userEmail: favoriteData.userEmail,

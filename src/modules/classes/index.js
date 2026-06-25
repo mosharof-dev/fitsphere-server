@@ -21,6 +21,10 @@ router.post("/", async (req, res) => {
       .json({ success: false, message: "Trainer not found" });
   }
 
+  if (trainer.status === "blocked") {
+    return res.status(403).json({ success: false, message: "Action restricted by Admin. You are blocked." });
+  }
+
   const newClass = {
     ...classInfo,
     trainerId: trainer._id,

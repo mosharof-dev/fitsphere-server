@@ -11,7 +11,16 @@ const usersCollection = db.collection("user");
 // Create a new forum post
 router.post("/", async (req, res) => {
   try {
-    const { title, image, description, authorId, authorName, authorEmail, authorImage, authorRole } = req.body;
+    const {
+      title,
+      image,
+      description,
+      authorId,
+      authorName,
+      authorEmail,
+      authorImage,
+      authorRole,
+    } = req.body;
 
     if (!title || !description || !authorId) {
       return res.status(400).json({ error: "Missing required fields" });
@@ -20,7 +29,9 @@ router.post("/", async (req, res) => {
     // Check if user is blocked
     const user = await usersCollection.findOne({ _id: new ObjectId(authorId) });
     if (user && user.status === "blocked") {
-      return res.status(403).json({ error: "Action restricted by Admin. You are blocked." });
+      return res
+        .status(403)
+        .json({ error: "Action restricted by Admin. You are blocked." });
     }
 
     const newPost = {
@@ -55,7 +66,7 @@ router.get("/", async (req, res) => {
 
     const posts = await forumCollection
       .find({})
-      .sort({ createdAt: -1 })
+      .sort({ _id: -1 })
       .skip(skip)
       .limit(limit)
       .toArray();
@@ -86,7 +97,7 @@ router.get("/my-posts", async (req, res) => {
 
     const posts = await forumCollection
       .find({ authorId: new ObjectId(userId) })
-      .sort({ createdAt: -1 })
+      .sort({ _id: -1 })
       .toArray();
 
     res.status(200).json(posts);
@@ -130,7 +141,9 @@ router.delete("/:id", async (req, res) => {
     }
 
     // Also delete associated comments and votes
-    await db.collection("forumComments").deleteMany({ postId: new ObjectId(id) });
+    await db
+      .collection("forumComments")
+      .deleteMany({ postId: new ObjectId(id) });
     await db.collection("forumVotes").deleteMany({ postId: new ObjectId(id) });
 
     res.status(200).json({ message: "Post deleted successfully" });
@@ -153,7 +166,9 @@ router.patch("/:id/vote", async (req, res) => {
     // Check if user is blocked
     const user = await usersCollection.findOne({ _id: new ObjectId(userId) });
     if (user && user.status === "blocked") {
-      return res.status(403).json({ error: "Action restricted by Admin. You are blocked." });
+      return res
+        .status(403)
+        .json({ error: "Action restricted by Admin. You are blocked." });
     }
 
     const postObjId = new ObjectId(id);
@@ -170,14 +185,19 @@ router.patch("/:id/vote", async (req, res) => {
       if (existingVote.type === type) {
         await forumVotesCollection.deleteOne({ _id: existingVote._id });
         const decField = type === "upvote" ? "likeCount" : "dislikeCount";
-        await forumCollection.updateOne({ _id: postObjId }, { $inc: { [decField]: -1 } });
-        return res.status(200).json({ message: "Vote removed", action: "removed" });
+        await forumCollection.updateOne(
+          { _id: postObjId },
+          { $inc: { [decField]: -1 } },
+        );
+        return res
+          .status(200)
+          .json({ message: "Vote removed", action: "removed" });
       }
 
       // If the user is changing their vote
       await forumVotesCollection.updateOne(
         { _id: existingVote._id },
-        { $set: { type } }
+        { $set: { type } },
       );
 
       // Adjust counts on the post
@@ -189,7 +209,7 @@ router.patch("/:id/vote", async (req, res) => {
         updateDoc.$inc.likeCount = -1;
         updateDoc.$inc.dislikeCount = 1;
       }
-      
+
       await forumCollection.updateOne({ _id: postObjId }, updateDoc);
       return res.status(200).json({ message: `Vote changed to ${type}` });
     }
@@ -205,7 +225,7 @@ router.patch("/:id/vote", async (req, res) => {
     const incField = type === "upvote" ? "likeCount" : "dislikeCount";
     await forumCollection.updateOne(
       { _id: postObjId },
-      { $inc: { [incField]: 1 } }
+      { $inc: { [incField]: 1 } },
     );
 
     res.status(200).json({ message: `Successfully ${type}d the post` });

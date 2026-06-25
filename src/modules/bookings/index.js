@@ -22,6 +22,10 @@ router.post("/", async (req, res) => {
     if (!user || user.role !== "user") {
       return res.status(403).json({ error: "Only regular users can book classes" });
     }
+
+    if (user.status === "blocked") {
+      return res.status(403).json({ error: "Action restricted by Admin. You are blocked." });
+    }
     
     // Check if already booked
     const existingBooking = await bookingsCollection.findOne({
