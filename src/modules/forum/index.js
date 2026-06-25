@@ -166,9 +166,12 @@ router.patch("/:id/vote", async (req, res) => {
     });
 
     if (existingVote) {
-      // If the user is trying to vote the same way again, return error or ignore
+      // If the user is trying to vote the same way again, toggle it off
       if (existingVote.type === type) {
-        return res.status(400).json({ error: `You have already ${type}d this post` });
+        await forumVotesCollection.deleteOne({ _id: existingVote._id });
+        const decField = type === "upvote" ? "likeCount" : "dislikeCount";
+        await forumCollection.updateOne({ _id: postObjId }, { $inc: { [decField]: -1 } });
+        return res.status(200).json({ message: "Vote removed", action: "removed" });
       }
 
       // If the user is changing their vote
