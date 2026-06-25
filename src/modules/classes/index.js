@@ -131,6 +131,25 @@ router.get("/all-classes", async (req, res) => {
   }
 });
 
+// Get Featured Classes Api (Top Booked)
+router.get("/featured", async (req, res) => {
+  try {
+    const data = await classesCollection
+      .find({ status: "approved" })
+      .sort({ bookingCount: -1 })
+      .limit(8)
+      .toArray();
+
+    res.status(200).send(data);
+  } catch (error) {
+    console.error("Get featured classes error:", error);
+    res.status(500).send({
+      success: false,
+      message: "Failed to fetch featured classes",
+    });
+  }
+});
+
 // Get Single Class Api
 router.get("/:id", async (req, res) => {
   const id = req.params.id;
