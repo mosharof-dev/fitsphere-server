@@ -16,7 +16,7 @@ const db = client.db("fit-sphere-database");
 
 const connectDB = async () => {
   try {
-    await client.connect();
+    // await client.connect();
     console.log("Successfully connected to MongoDB!");
   } catch (error) {
     console.error("MongoDB Connection Error:", error);

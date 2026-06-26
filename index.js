@@ -32,6 +32,10 @@ app.use((req, res, next) => {
   res.status(404).json({ success: false, message: "API Not Found" });
 });
 
-app.listen(port, () => {
-  console.log(`FitSphere Server is running on port ${port}`);
-});
+if (process.env.NODE_ENV !== "production") {
+  app.listen(port, () => {
+    console.log(`FitSphere Server is running on port ${port}`);
+  });
+}
+
+module.exports = app;
