@@ -1,6 +1,8 @@
 const express = require("express");
 const router = express.Router();
 const { db } = require("../../config/db");
+const verifyToken = require("../../middlewares/verifyToken");
+const verifyBlockedUser = require("../../middlewares/verifyBlockedUser");
 
 // Favorites Collection
 const favoritesCollection = db.collection("favorites");
@@ -8,7 +10,7 @@ const favoritesCollection = db.collection("favorites");
 const usersCollection = db.collection("user");
 
 // POST: Add a favorite for a user
-router.post("/", async (req, res) => {
+router.post("/", verifyToken, verifyBlockedUser, async (req, res) => {
   try {
     const favoriteData = req.body;
     
@@ -49,7 +51,7 @@ router.post("/", async (req, res) => {
 });
 
 // GET: Check if a specific class is favorited by a user
-router.get("/check/:classId", async (req, res) => {
+router.get("/check/:classId", verifyToken, async (req, res) => {
   try {
     const { classId } = req.params;
     const { userEmail } = req.query;
@@ -70,7 +72,7 @@ router.get("/check/:classId", async (req, res) => {
 });
 
 // GET: Get all favorites for a user
-router.get("/:userEmail", async (req, res) => {
+router.get("/:userEmail", verifyToken, async (req, res) => {
   try {
     const { userEmail } = req.params;
     const favorites = await favoritesCollection.find({ userEmail }).toArray();
@@ -83,7 +85,7 @@ router.get("/:userEmail", async (req, res) => {
 });
 
 // DELETE: Remove a favorite
-router.delete("/:classId", async (req, res) => {
+router.delete("/:classId", verifyToken, verifyBlockedUser, async (req, res) => {
   try {
     const { classId } = req.params;
     const { userEmail } = req.query;

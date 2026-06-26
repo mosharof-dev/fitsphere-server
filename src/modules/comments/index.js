@@ -2,13 +2,15 @@ const express = require("express");
 const router = express.Router();
 const { db } = require("../../config/db");
 const { ObjectId } = require("mongodb");
+const verifyToken = require("../../middlewares/verifyToken");
+const verifyBlockedUser = require("../../middlewares/verifyBlockedUser");
 
 const forumCommentsCollection = db.collection("forumComments");
 const forumCollection = db.collection("forum");
 const usersCollection = db.collection("user");
 
 // Create a new comment or reply
-router.post("/:postId", async (req, res) => {
+router.post("/:postId", verifyToken, verifyBlockedUser, async (req, res) => {
   try {
     const { postId } = req.params;
     const { parentCommentId, text, authorId, authorName, authorImage } =
@@ -52,7 +54,7 @@ router.post("/:postId", async (req, res) => {
 });
 
 // Get all comments for a post
-router.get("/:postId", async (req, res) => {
+router.get("/:postId", verifyToken, async (req, res) => {
   try {
     const { postId } = req.params;
 
@@ -73,7 +75,7 @@ router.get("/:postId", async (req, res) => {
 });
 
 // Edit a comment
-router.patch("/:commentId", async (req, res) => {
+router.patch("/:commentId", verifyToken, verifyBlockedUser, async (req, res) => {
   try {
     const { commentId } = req.params;
     const { text, authorId } = req.body; // authorId to verify ownership
@@ -116,7 +118,7 @@ router.patch("/:commentId", async (req, res) => {
 });
 
 // Delete a comment
-router.delete("/:commentId", async (req, res) => {
+router.delete("/:commentId", verifyToken, verifyBlockedUser, async (req, res) => {
   try {
     const { commentId } = req.params;
     const { authorId } = req.body; // In real app, from JWT

@@ -10,8 +10,10 @@ const favoritesRoutes = require('../modules/favorites');
 const forumRoutes = require('../modules/forum');
 const commentsRoutes = require('../modules/comments');
 const dashboardRoutes = require('../modules/dashboard');
+const jwtRoutes = require('../modules/jwt/jwt.routes');
 
 // Mount all module routes
+router.use('/jwt', jwtRoutes);
 router.use('/users', usersRoutes);
 router.use('/trainerApplications', trainerApplicationsRoutes);
 router.use('/classes', classesRoutes);

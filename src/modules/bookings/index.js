@@ -2,13 +2,16 @@ const express = require("express");
 const router = express.Router();
 const { db } = require("../../config/db");
 const { ObjectId } = require("mongodb");
+const verifyToken = require("../../middlewares/verifyToken");
+const verifyAdmin = require("../../middlewares/verifyAdmin");
+const verifyBlockedUser = require("../../middlewares/verifyBlockedUser");
 
 // Bookings Collection
 const bookingsCollection = db.collection("bookings");
 const classesCollection = db.collection("classes");
 
 // Create a new booking
-router.post("/", async (req, res) => {
+router.post("/", verifyToken, verifyBlockedUser, async (req, res) => {
   try {
     const booking = req.body;
     booking.createdAt = new Date();
@@ -55,7 +58,7 @@ router.post("/", async (req, res) => {
 });
 
 // Check if a user has booked a specific class
-router.get("/check/:email/:classId", async (req, res) => {
+router.get("/check/:email/:classId", verifyToken, async (req, res) => {
   try {
     const { email, classId } = req.params;
     
@@ -72,7 +75,7 @@ router.get("/check/:email/:classId", async (req, res) => {
 });
 
 // Get all bookings (Transactions)
-router.get("/", async (req, res) => {
+router.get("/", verifyToken, verifyAdmin, async (req, res) => {
   try {
     const bookings = await bookingsCollection.find({}).sort({ createdAt: -1 }).toArray();
     res.json(bookings);
@@ -83,7 +86,7 @@ router.get("/", async (req, res) => {
 });
 
 // Get all bookings for a user by email
-router.get("/my-bookings/:email", async (req, res) => {
+router.get("/my-bookings/:email", verifyToken, async (req, res) => {
   try {
     const email = req.params.email;
     const query = { userEmail: email };

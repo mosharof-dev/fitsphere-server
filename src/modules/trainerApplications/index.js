@@ -2,13 +2,16 @@ const express = require("express");
 const router = express.Router();
 const { db } = require("../../config/db");
 const { ObjectId } = require("mongodb");
+const verifyToken = require("../../middlewares/verifyToken");
+const verifyAdmin = require("../../middlewares/verifyAdmin");
+const verifyBlockedUser = require("../../middlewares/verifyBlockedUser");
 
 // Trainer Applications Collection
 const applicationsCollection = db.collection("trainerApplications");
 const usersCollection = db.collection("user");
 
 // Create a new trainer application
-router.post("/", async (req, res) => {
+router.post("/", verifyToken, verifyBlockedUser, async (req, res) => {
   try {
     const application = req.body;
     // Basic validation
@@ -47,7 +50,7 @@ router.post("/", async (req, res) => {
 });
 
 // Get all applications (optionally filter by status)
-router.get("/", async (req, res) => {
+router.get("/", verifyToken, verifyAdmin, async (req, res) => {
   try {
     const { status } = req.query;
     const query = {};
@@ -63,7 +66,7 @@ router.get("/", async (req, res) => {
 });
 
 // Get a single application by userId
-router.get("/user/:userId", async (req, res) => {
+router.get("/user/:userId", verifyToken, async (req, res) => {
   try {
     const { userId } = req.params;
     const result = await applicationsCollection.findOne({ userId });
@@ -78,7 +81,7 @@ router.get("/user/:userId", async (req, res) => {
 });
 
 // Update application status (Approve/Reject)
-router.patch("/:id", async (req, res) => {
+router.patch("/:id", verifyToken, verifyAdmin, async (req, res) => {
   try {
     const { id } = req.params;
     const { status, feedback } = req.body;

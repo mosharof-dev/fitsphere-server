@@ -2,6 +2,8 @@ const express = require("express");
 const router = express.Router();
 const { db } = require("../../config/db");
 const { ObjectId } = require("mongodb");
+const verifyToken = require("../../middlewares/verifyToken");
+const verifyBlockedUser = require("../../middlewares/verifyBlockedUser");
 
 // Collections
 const forumCollection = db.collection("forum");
@@ -9,7 +11,7 @@ const forumVotesCollection = db.collection("forumVotes");
 const usersCollection = db.collection("user");
 
 // Create a new forum post
-router.post("/", async (req, res) => {
+router.post("/", verifyToken, verifyBlockedUser, async (req, res) => {
   try {
     const {
       title,
@@ -88,7 +90,7 @@ router.get("/", async (req, res) => {
 // Get posts for a specific user (My Posts)
 // Note: In production, the userId should come from the decoded JWT token.
 // For now, we will pass it as a query parameter or extract it if provided.
-router.get("/my-posts", async (req, res) => {
+router.get("/my-posts", verifyToken, async (req, res) => {
   try {
     const { userId } = req.query; // Fallback, normally from req.user
     if (!userId) {
@@ -108,7 +110,7 @@ router.get("/my-posts", async (req, res) => {
 });
 
 // Get a single post by ID
-router.get("/:id", async (req, res) => {
+router.get("/:id", verifyToken, async (req, res) => {
   try {
     const { id } = req.params;
     if (!ObjectId.isValid(id)) {
@@ -128,7 +130,7 @@ router.get("/:id", async (req, res) => {
 });
 
 // Delete a post
-router.delete("/:id", async (req, res) => {
+router.delete("/:id", verifyToken, verifyBlockedUser, async (req, res) => {
   try {
     const { id } = req.params;
     if (!ObjectId.isValid(id)) {
@@ -154,7 +156,7 @@ router.delete("/:id", async (req, res) => {
 });
 
 // Upvote / Downvote a post
-router.patch("/:id/vote", async (req, res) => {
+router.patch("/:id/vote", verifyToken, verifyBlockedUser, async (req, res) => {
   try {
     const { id } = req.params;
     const { userId, type } = req.body; // type = 'upvote' or 'downvote'
@@ -236,7 +238,7 @@ router.patch("/:id/vote", async (req, res) => {
 });
 
 // Check user's vote status for a post
-router.get("/:id/vote-status", async (req, res) => {
+router.get("/:id/vote-status", verifyToken, async (req, res) => {
   try {
     const { id } = req.params;
     const { userId } = req.query;

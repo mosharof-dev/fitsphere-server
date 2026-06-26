@@ -2,11 +2,12 @@ const express = require("express");
 const router = express.Router();
 const { db } = require("../../config/db");
 const stripe = require("stripe")(process.env.STRIPE_SECRET_KEY);
+const verifyToken = require("../../middlewares/verifyToken");
 
 // Payments Collection
 const paymentsCollection = db.collection("payments");
 
-router.post("/create-checkout-session", async (req, res) => {
+router.post("/create-checkout-session", verifyToken, async (req, res) => {
   try {
     const { price, className, classId, trainerName, customerEmail, classImage } = req.body;
     

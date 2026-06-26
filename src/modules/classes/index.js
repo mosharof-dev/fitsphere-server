@@ -2,13 +2,17 @@ const express = require("express");
 const router = express.Router();
 const { db } = require("../../config/db");
 const { ObjectId } = require("mongodb");
+const verifyToken = require("../../middlewares/verifyToken");
+const verifyTrainer = require("../../middlewares/verifyTrainer");
+const verifyAdmin = require("../../middlewares/verifyAdmin");
+const verifyBlockedUser = require("../../middlewares/verifyBlockedUser");
 
 // Classes Collection
 const classesCollection = db.collection("classes");
 const usersCollection = db.collection("user");
 
 // Post Classes Api
-router.post("/", async (req, res) => {
+router.post("/", verifyToken, verifyTrainer, verifyBlockedUser, async (req, res) => {
   const classInfo = req.body;
 
   const trainer = await usersCollection.findOne({
@@ -99,7 +103,7 @@ router.get("/", async (req, res) => {
 });
 
 // Get All Classes for Admin Api (Includes pending, approved, rejected)
-router.get("/all-classes", async (req, res) => {
+router.get("/all-classes", verifyToken, verifyAdmin, async (req, res) => {
   try {
     const page = Number(req.query.page) || 1;
     const limit = Number(req.query.limit) || 6;
@@ -159,7 +163,7 @@ router.get("/:id", async (req, res) => {
 });
 
 // Get trainer my classes api
-router.get("/my-classes/:id", async (req, res) => {
+router.get("/my-classes/:id", verifyToken, verifyTrainer, async (req, res) => {
   try {
     const id = req.params.id;
     const query = { trainerId: new ObjectId(id) };
@@ -178,7 +182,7 @@ router.get("/my-classes/:id", async (req, res) => {
 });
 
 // Update Class Api
-router.patch("/:id", async (req, res) => {
+router.patch("/:id", verifyToken, verifyTrainer, verifyBlockedUser, async (req, res) => {
   try {
     const id = req.params.id;
     const query = { _id: new ObjectId(id) };
@@ -196,7 +200,7 @@ router.patch("/:id", async (req, res) => {
   }
 });
 // Delete Class Api
-router.delete("/:id", async (req, res) => {
+router.delete("/:id", verifyToken, verifyTrainer, verifyBlockedUser, async (req, res) => {
   try {
     const id = req.params.id;
     const query = { _id: new ObjectId(id) };
@@ -212,7 +216,7 @@ router.delete("/:id", async (req, res) => {
 });
 
 // Update Class Status Api
-router.patch("/status/:id", async (req, res) => {
+router.patch("/status/:id", verifyToken, verifyAdmin, async (req, res) => {
   try {
     const id = req.params.id;
     const query = { _id: new ObjectId(id) };
