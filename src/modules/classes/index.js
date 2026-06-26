@@ -155,7 +155,7 @@ router.get("/featured", async (req, res) => {
 });
 
 // Get Single Class Api
-router.get("/:id", async (req, res) => {
+router.get("/:id", verifyToken, async (req, res) => {
   const id = req.params.id;
   const query = { _id: new ObjectId(id) };
   const result = await classesCollection.findOne(query);
