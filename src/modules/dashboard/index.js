@@ -68,12 +68,24 @@ router.get("/", async (req, res) => {
       const totalClassesCreated = await classesCollection.countDocuments({ trainerEmail: email });
       
       // Calculate total students enrolled across all classes by this trainer
-      const classes = await classesCollection.find({ trainerEmail: email }, { projection: { bookingCount: 1 } }).toArray();
+      const classes = await classesCollection.find({ trainerEmail: email }, { projection: { class_name: 1, name: 1, bookingCount: 1 } }).toArray();
       const totalStudentsEnrolled = classes.reduce((sum, cls) => sum + (cls.bookingCount || 0), 0);
+
+      const totalPosts = await db.collection("forum").countDocuments({ authorEmail: email });
+
+      // Prepare data for the pie chart (Bookings per class)
+      const classBookingsData = classes
+        .filter(cls => (cls.bookingCount || 0) > 0)
+        .map(cls => ({
+          name: cls.class_name || cls.name || "Unknown Class",
+          value: cls.bookingCount || 0
+        }));
 
       return res.status(200).json({
         totalClassesCreated,
         totalStudentsEnrolled,
+        totalPosts,
+        classBookingsData
       });
     } 
     
