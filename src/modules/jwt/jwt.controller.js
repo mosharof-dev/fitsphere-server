@@ -15,7 +15,7 @@ const signToken = async (req, res) => {
         secure: process.env.NODE_ENV === 'production',
         sameSite: process.env.NODE_ENV === 'production' ? 'none' : 'strict',
       })
-      .send({ success: true });
+      .send({ success: true, token });
   } catch (error) {
     res.status(500).json({ success: false, message: 'Failed to generate token', error });
   }

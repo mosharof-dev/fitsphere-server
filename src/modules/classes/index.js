@@ -6,6 +6,7 @@ const verifyToken = require("../../middlewares/verifyToken");
 const verifyTrainer = require("../../middlewares/verifyTrainer");
 const verifyAdmin = require("../../middlewares/verifyAdmin");
 const verifyBlockedUser = require("../../middlewares/verifyBlockedUser");
+const verifyTrainerOrAdmin = require("../../middlewares/verifyTrainerOrAdmin");
 
 // Classes Collection
 const classesCollection = db.collection("classes");
@@ -182,7 +183,7 @@ router.get("/my-classes/:id", verifyToken, verifyTrainer, async (req, res) => {
 });
 
 // Update Class Api
-router.patch("/:id", verifyToken, verifyTrainer, verifyBlockedUser, async (req, res) => {
+router.patch("/:id", verifyToken, verifyTrainerOrAdmin, verifyBlockedUser, async (req, res) => {
   try {
     const id = req.params.id;
     const query = { _id: new ObjectId(id) };
@@ -200,7 +201,7 @@ router.patch("/:id", verifyToken, verifyTrainer, verifyBlockedUser, async (req, 
   }
 });
 // Delete Class Api
-router.delete("/:id", verifyToken, verifyTrainer, verifyBlockedUser, async (req, res) => {
+router.delete("/:id", verifyToken, verifyTrainerOrAdmin, verifyBlockedUser, async (req, res) => {
   try {
     const id = req.params.id;
     const query = { _id: new ObjectId(id) };
