@@ -6,7 +6,7 @@ const verifyToken = require("../../middlewares/verifyToken");
 const verifyAdmin = require("../../middlewares/verifyAdmin");
 const verifyBlockedUser = require("../../middlewares/verifyBlockedUser");
 
-// Bookings Collection
+
 const bookingsCollection = db.collection("bookings");
 const classesCollection = db.collection("classes");
 
